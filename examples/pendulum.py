@@ -8,18 +8,11 @@ from functions import pendulum_motion, numerical_derivative
 import time
 
 class FCN(nn.Module):
-    "Defines a connected network"
-    
     def __init__(self, N_INPUT, N_OUTPUT, N_HIDDEN, N_LAYERS):
         super().__init__()
         activation = nn.Tanh
-        self.fcs = nn.Sequential(*[
-                        nn.Linear(N_INPUT, N_HIDDEN),
-                        activation()])
-        self.fch = nn.Sequential(*[
-                        nn.Sequential(*[
-                            nn.Linear(N_HIDDEN, N_HIDDEN),
-                            activation()]) for _ in range(N_LAYERS-1)])
+        self.fcs = nn.Sequential(*[nn.Linear(N_INPUT, N_HIDDEN),activation()])
+        self.fch = nn.Sequential(*[nn.Sequential(*[nn.Linear(N_HIDDEN, N_HIDDEN),activation()]) for _ in range(N_LAYERS-1)])
         self.fce = nn.Linear(N_HIDDEN, N_OUTPUT)
         
     def forward(self, x):
@@ -29,7 +22,7 @@ class FCN(nn.Module):
         return x
 
 torch.manual_seed(42)
-model = FCN(1,1,50,5)
+model = FCN(1,1,50,2)
 
 # Initial and boundary conditions
 t_final = 3
@@ -51,7 +44,7 @@ theta_dot_initial = torch.tensor(theta_dot_initial).view(-1,1)
 t_initial = torch.tensor([0.0, 0.0]).requires_grad_(True).view(-1,1)
 
 # Physics informed points
-n = 200 # collation points
+n = 100 # collation points
 t = torch.linspace(0,t_final,n).view(-1,1).requires_grad_(True)
 
 # Optimizer
@@ -93,7 +86,6 @@ for i in range(n_epochs):
     loss_history[1].append(i)
     pbar.set_description(f'Epoch {i + 1}/{n_epochs}, Loss IC: {loss_i.item():.8f}, Loss Phys: {loss_physics.item():.8f}')
     
-    #pbar.set_description(f'Epoch {i + 1}/{n_epochs}, Loss IC: {loss_i.item():.8f}, Loss BC: {loss_b.item():.8f}, Loss Phys: {loss_physics.item():.8f}, Loss Stat.: {stat_loss.item():.8f}')
     pbar.update(1)
 pbar.close()
 
